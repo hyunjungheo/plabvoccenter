@@ -16,7 +16,11 @@ export default async function handler(req) {
     const SHEET_ID   = process.env.SHEET_ID;
     const SHEET_NAME = process.env.SHEET_NAME || 'Sheet1';
     const SA_EMAIL   = process.env.GCP_SA_EMAIL;
-    const SA_KEY     = process.env.GCP_SA_KEY.replace(/\\n/g, '\n'); // 환경변수의 줄바꿈 복원
+    // 환경변수 줄바꿈 복원: \\n 리터럴, \n 리터럴, 실제 줄바꿈 모두 처리
+    const SA_KEY = process.env.GCP_SA_KEY
+      .replace(/\\\\n/g, '\n')
+      .replace(/\\n/g, '\n')
+      .trim();
 
     // 1. 서비스 계정으로 Google OAuth 토큰 발급 (JWT → access_token)
     const now   = Math.floor(Date.now() / 1000);
@@ -33,8 +37,11 @@ export default async function handler(req) {
     const payload = btoa(JSON.stringify(claim)).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
     const toSign  = `${header}.${payload}`;
 
-    // PEM → CryptoKey
-    const pemBody = SA_KEY.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\n/g, '');
+    // PEM → CryptoKey (헤더/푸터/공백 모두 제거)
+    const pemBody = SA_KEY
+      .replace(/-----BEGIN PRIVATE KEY-----/g, '')
+      .replace(/-----END PRIVATE KEY-----/g, '')
+      .replace(/\s+/g, '');  // 모든 공백·줄바꿈 제거
     const derBuf  = Uint8Array.from(atob(pemBody), c => c.charCodeAt(0));
     const cryptoKey = await crypto.subtle.importKey(
       'pkcs8', derBuf,
