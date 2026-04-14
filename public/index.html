@@ -555,13 +555,8 @@ function getFilteredPool() {
 }
 
 function updateDateCount() {
-  const from = document.getElementById("dateFrom").value;
-  const to   = document.getElementById("dateTo").value;
-  const el   = document.getElementById("dateCount");
-  if (!from && !to) { el.style.display="none"; return; }
-  const cnt = getFilteredPool().length;
-  el.textContent = cnt.toLocaleString() + "건 해당";
-  el.style.display = "inline-flex";
+  // dateCount 요소는 제거됨 — estimatedTime 으로 통합
+  updateEstimatedTime();
 }
 
 function clearDate() {
@@ -744,7 +739,7 @@ async function aiSearch() {
   // ── 관련도 필터 + 내보내기 표시
   currentRelMin = 0;
   document.getElementById("relSlider").value = 0;
-  document.getElementById("relValueLabel").textContent = "전체 표시";
+  document.getElementById("relBadge").textContent      = "전체";
   document.querySelectorAll(".rel-preset").forEach((b,i) => b.classList.toggle("on", i===0));
   document.getElementById("exportFab").className = "export-fab show";
 
