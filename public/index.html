@@ -625,7 +625,7 @@ async function aiSearch() {
   // 날짜 필터 적용
   const dateFilteredPool = getFilteredPool();
   const bv   = document.getElementById("batchSize").value;
-  const pool = bv === "all" ? dateFilteredPool : dateFilteredPool.slice(0, parseInt(bv));
+  const pool = bv === "all" ? dateFilteredPool : dateFilteredPool.slice(-parseInt(bv));
 
   const CHUNK    = 50;   // 청크 크기 20→50 (API 호출 횟수 60% 감소)
   const PARALLEL = 5;    // 동시 병렬 처리 수
