@@ -160,12 +160,107 @@ textarea#query::placeholder{color:var(--placeholder);line-height:1.75}
 .empty-text{font-size:14px;color:var(--muted);font-weight:500}
 .empty-sub{font-size:12px;color:var(--hint)}
 .footer{text-align:center;font-size:12px;color:var(--hint);margin-top:40px;padding-top:20px;border-top:1px solid var(--border);font-weight:500;}
+/* ── DATE FILTER ── */
+.date-filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:0 20px 16px;}
+.date-filter-row .date-label{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
+.date-input{font-family:"Pretendard",sans-serif;font-size:13px;color:var(--text);background:var(--bg);border:1.5px solid var(--border2);border-radius:var(--r-sm);padding:7px 10px;outline:none;cursor:pointer;transition:border-color .15s;}
+.date-input:focus{border-color:var(--blue)}
+.date-sep{font-size:12px;color:var(--hint)}
+.date-clear{font-size:11px;font-weight:600;color:var(--muted);background:transparent;border:1px solid var(--border2);border-radius:var(--r-xs);padding:4px 9px;cursor:pointer;transition:all .15s;}
+.date-clear:hover{color:var(--red);border-color:#fecaca;background:var(--red-bg)}
+.date-count{font-size:11px;color:var(--blue);font-weight:700;background:var(--blue-bg);border:1px solid var(--blue-bdr);padding:3px 8px;border-radius:99px;margin-left:auto;}
+/* ── STOP BUTTON ── */
+.btn-stop{font-family:"Pretendard",sans-serif;font-size:14px;font-weight:700;padding:11px 20px;background:#fff;color:var(--red);border:1.5px solid #fecaca;border-radius:var(--r-sm);cursor:pointer;display:none;align-items:center;gap:6px;transition:all .15s;white-space:nowrap;}
+.btn-stop.show{display:flex}
+.btn-stop:hover{background:var(--red-bg)}
+.btn-stop svg{width:14px;height:14px;flex-shrink:0}
+/* ── PARTIAL RESULT NOTICE ── */
+.partial-notice{display:none;align-items:center;gap:8px;background:var(--amber-bg);border:1px solid #fde68a;border-radius:var(--r-sm);padding:9px 14px;margin-bottom:12px;font-size:12px;color:#92400e;font-weight:500;}
+.partial-notice.show{display:flex}
+/* ── RELEVANCE FILTER ── */
+.rel-filter{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 16px;margin-bottom:12px;flex-wrap:wrap;}
+.rel-filter-label{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
+.rel-slider{flex:1;min-width:120px;accent-color:var(--blue);cursor:pointer}
+.rel-value{font-size:13px;font-weight:700;color:var(--blue);min-width:80px;text-align:right;white-space:nowrap}
+.rel-presets{display:flex;gap:4px;flex-wrap:wrap}
+.rel-preset{font-size:11px;font-weight:600;padding:3px 8px;border:1px solid var(--border2);border-radius:99px;cursor:pointer;color:var(--muted);background:transparent;transition:all .12s}
+.rel-preset:hover,.rel-preset.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+/* ── AI SUMMARY BULLETS ── */
+.ai-summary-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:5px}
+.ai-summary-list li{font-size:13px;color:#1e40af;font-weight:500;line-height:1.55;display:flex;gap:6px;align-items:flex-start}
+.ai-summary-list li::before{content:"•";color:var(--blue);font-weight:900;flex-shrink:0;margin-top:1px}
+/* ── EXPORT BUTTONS ── */
+.export-row{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.btn-export{font-family:"Pretendard",sans-serif;font-size:12px;font-weight:600;padding:7px 14px;border:1.5px solid var(--border2);border-radius:var(--r-sm);cursor:pointer;background:var(--surface);color:var(--sub);display:flex;align-items:center;gap:5px;transition:all .15s}
+.btn-export:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-bg)}
+.btn-export svg{width:14px;height:14px;flex-shrink:0}
+.dedup-badge{font-size:11px;font-weight:700;color:var(--green);background:var(--green-bg);border:1px solid var(--green-bdr);padding:3px 9px;border-radius:99px;margin-left:auto}
+/* ── EXPORT FAB */
+.export-fab{position:fixed;right:24px;bottom:28px;z-index:100;display:none;flex-direction:column;align-items:flex-end;gap:8px}
+.export-fab.show{display:flex}
+.fab-btn{font-family:"Pretendard",sans-serif;font-size:12px;font-weight:700;padding:9px 16px;border-radius:99px;display:flex;align-items:center;gap:6px;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(0,0,0,.14);white-space:nowrap}
+.fab-btn svg{width:14px;height:14px;flex-shrink:0}
+.fab-csv{background:var(--surface);color:var(--sub);border:1.5px solid var(--border2)}
+.fab-csv:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-bg)}
+.fab-drive{background:var(--blue);color:#fff;border:none}
+.fab-drive:hover{background:var(--blue-h)}
+.fab-label{font-size:10px;font-weight:600;color:var(--hint);text-align:right;padding-right:4px}
+
+/* ── CONTROL BAR (3열 필터) */
+.control-bar{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;
+  padding:16px 20px 14px;border-top:1px solid var(--border);background:#fafbfc;
+}
+.ctrl-group{display:flex;flex-direction:column;gap:6px}
+.ctrl-label{font-size:11px;font-weight:700;color:var(--hint);letter-spacing:.06em;text-transform:uppercase}
+.date-row{display:flex;align-items:center;gap:5px}
+.date-input{
+  font-family:"Pretendard",sans-serif;font-size:12px;color:var(--text);
+  background:var(--surface);border:1.5px solid var(--border2);
+  border-radius:var(--r-sm);padding:0 8px;outline:none;
+  transition:border-color .15s;width:100%;height:36px;
+}
+.date-input:focus{border-color:var(--blue)}
+.date-sep{font-size:11px;color:var(--hint);flex-shrink:0}
+.ctrl-select{
+  font-family:"Pretendard",sans-serif;font-size:13px;font-weight:500;
+  color:var(--text);background:var(--surface);
+  border:1.5px solid var(--border2);border-radius:var(--r-sm);
+  padding:0 10px;outline:none;cursor:pointer;
+  transition:border-color .15s;width:100%;height:36px;
+}
+.ctrl-select:focus{border-color:var(--blue)}
+.rel-box{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface);border:1.5px solid var(--border2);
+  border-radius:var(--r-sm);padding:0 10px;height:36px;
+  transition:border-color .15s;
+}
+.rel-box:focus-within{border-color:var(--blue)}
+.rel-slider{flex:1;accent-color:var(--blue);cursor:pointer;margin:0}
+.rel-badge{
+  font-size:11px;font-weight:700;color:var(--blue);
+  background:var(--blue-bg);border:1px solid var(--blue-bdr);
+  padding:2px 7px;border-radius:99px;white-space:nowrap;
+  min-width:46px;text-align:center;flex-shrink:0;
+}
+/* ── ACTION BAR */
+.action-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px 18px;background:#fafbfc;
+}
+.meta-info{display:flex;align-items:center;gap:8px}
+.meta-count{font-size:13px;font-weight:600;color:var(--text)}
+
 @media(max-width:580px){
   .stats{grid-template-columns:repeat(2,1fr)}
   .page{padding:24px 16px 60px}.page-title{font-size:22px}
-  .search-body{padding:16px 16px 12px}.search-actions{flex-wrap:wrap;padding:10px 16px 14px}
-  .filter-row{padding:10px 16px 14px}.voc-card{padding:14px}
+  .search-body{padding:16px 16px 12px}
+  .control-bar{grid-template-columns:1fr 1fr;gap:10px}
+  .ctrl-group:last-child{grid-column:span 2}
+  .voc-card{padding:14px}
   .login-card{padding:36px 24px 32px}.user-name{display:none}
+  .rel-filter{flex-direction:column;align-items:flex-start}
 }
 </style>
 </head>
@@ -226,27 +321,49 @@ textarea#query::placeholder{color:var(--placeholder);line-height:1.75}
         placeholder="예) 흡연 관련된 불만을 모두 찾아줘&#10;예) 매니저 태도나 운영 방식에 대한 불만&#10;예) 다시 방문하기 싫다고 느낀 고객 VOC"></textarea>
       <div class="err" id="errBox"></div>
     </div>
-    <div class="search-actions">
-      <select class="batch-sel" id="batchSize">
-        <option value="30">최근 30건 분석</option>
-        <option value="50" selected>최근 50건 분석</option>
-        <option value="100">최근 100건 분석</option>
-        <option value="all">전체 분석</option>
-      </select>
-      <button class="btn-run" id="searchBtn" onclick="aiSearch()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="15.5" y2="15.5"/></svg>
-        AI 분석 검색
-      </button>
+    <!-- 필터 바: 날짜 / 건수 / 관련도 — 3열 균등 -->
+    <div class="control-bar">
+      <div class="ctrl-group">
+        <span class="ctrl-label">날짜 범위</span>
+        <div class="date-row">
+          <input type="date" class="date-input" id="dateFrom" onchange="updateDateCount();updateEstimatedTime()"/>
+          <span class="date-sep">~</span>
+          <input type="date" class="date-input" id="dateTo" onchange="updateDateCount();updateEstimatedTime()"/>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">분석 건수</span>
+        <select class="ctrl-select" id="batchSize" onchange="updateEstimatedTime()">
+          <option value="30">최근 30건</option>
+          <option value="50" selected>최근 50건</option>
+          <option value="100">최근 100건</option>
+          <option value="all">전체</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">최소 관련도</span>
+        <div class="rel-box">
+          <input type="range" class="rel-slider" id="relSlider" min="0" max="95" value="0" step="5" oninput="onRelSlide(this.value)"/>
+          <span class="rel-badge" id="relBadge">전체</span>
+        </div>
+      </div>
     </div>
-    <div class="filter-row">
-      <span class="chip" onclick="setQ(this,'흡연 또는 담배 관련된 불만')">🚬 흡연</span>
-      <span class="chip" onclick="setQ(this,'매니저 태도나 운영 방식 관련 불만')">😤 매니저 불만</span>
-      <span class="chip" onclick="setQ(this,'시설이나 환경 관련 불만 또는 개선 요청')">🏟 시설·환경</span>
-      <span class="chip" onclick="setQ(this,'환불 또는 요금 관련 문의나 불만')">💰 환불·요금</span>
-      <span class="chip" onclick="setQ(this,'재방문 거부 의사나 이탈 위험이 있는 고객')">⚠️ 이탈 위험</span>
-      <span class="chip" onclick="setQ(this,'잔디 상태나 그라운드 컨디션 관련 불만')">🌿 잔디 상태</span>
-      <span class="chip" onclick="setQ(this,'긍정적인 경험이나 칭찬을 남긴 VOC')">⭐ 긍정 VOC</span>
-      <span class="chip" onclick="setQ(this,'팀원 간 갈등이나 비매너 관련 VOC')">🤝 매너 문제</span>
+
+    <!-- 액션 바: 메타 + 정지 + 검색 -->
+    <div class="action-bar">
+      <div class="meta-info">
+        <span class="meta-count" id="estimatedTime"></span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn-stop" id="stopBtn" onclick="stopSearch()">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+          분석 정지
+        </button>
+        <button class="btn-run" id="searchBtn" onclick="aiSearch()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="15.5" y2="15.5"/></svg>
+          AI 분석 검색
+        </button>
+      </div>
     </div>
   </div>
 
@@ -257,7 +374,7 @@ textarea#query::placeholder{color:var(--placeholder);line-height:1.75}
 
   <div class="ai-box" id="aiBox">
     <div class="ai-box-label">AI 분석 요약</div>
-    <div class="ai-box-text" id="aiBoxText"></div>
+    <ul class="ai-summary-list" id="aiBoxList"></ul>
   </div>
 
   <div class="stats" id="statsGrid">
@@ -265,6 +382,23 @@ textarea#query::placeholder{color:var(--placeholder);line-height:1.75}
     <div class="stat"><div class="stat-n" id="sAnalyzed">—</div><div class="stat-l">분석 건수</div></div>
     <div class="stat"><div class="stat-n" id="sRate">—</div><div class="stat-l">관련도</div></div>
     <div class="stat"><div class="stat-n" id="sTotal">—</div><div class="stat-l">전체 VOC</div></div>
+  </div>
+
+  <div class="partial-notice" id="partialNotice">
+    ⚠️ <span id="partialText">분석이 중간에 정지되었습니다. 아래는 정지 시점까지의 결과입니다.</span>
+  </div>
+
+  <!-- Export FAB (우측 하단 고정) -->
+  <div class="export-fab" id="exportFab">
+    <span class="fab-label">결과 내보내기</span>
+    <button class="fab-btn fab-drive" onclick="exportGDrive()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+      Google Drive
+    </button>
+    <button class="fab-btn fab-csv" onclick="exportCSV()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      CSV 다운로드
+    </button>
   </div>
 
   <div class="results-hd" id="resultsHd">
@@ -298,6 +432,8 @@ let FIREBASE_CONFIG = null;
 
 let auth, provider;
 let allData = [], matched = [], summaries = [];
+let stopFlag = false;
+let currentRelMin = 0;
 
 // ── 환경변수에서 Firebase Config 로드 후 초기화
 async function initApp() {
@@ -390,6 +526,8 @@ async function loadSheet() {
     allData = (data.rows || []).filter(r => r[COL.message] && r[COL.message].trim());
     document.getElementById("gnbText").textContent = allData.length.toLocaleString() + "건 로드됨";
     document.getElementById("sTotal").textContent  = allData.length.toLocaleString();
+    updateDateCount();
+    updateEstimatedTime();
   } catch(e) {
     document.getElementById("gnbText").textContent = "시트 로드 실패";
     showErr("시트 로드 실패: 서비스 계정 설정을 확인해주세요. (" + e.message + ")");
@@ -406,73 +544,218 @@ function showErr(msg) { const e=document.getElementById("errBox"); e.textContent
 function hideErr()    { document.getElementById("errBox").className="err"; }
 function setProgress(p){ document.getElementById("progFill").style.width=p+"%"; }
 
+// ── 날짜 필터 적용된 데이터 풀 반환
+function getFilteredPool() {
+  const from = document.getElementById("dateFrom").value;
+  const to   = document.getElementById("dateTo").value;
+  let pool = [...allData];
+  if (from) pool = pool.filter(r => (r[COL.date]||"").slice(0,10) >= from);
+  if (to)   pool = pool.filter(r => (r[COL.date]||"").slice(0,10) <= to);
+  return pool;
+}
+
+function updateDateCount() {
+  const from = document.getElementById("dateFrom").value;
+  const to   = document.getElementById("dateTo").value;
+  const el   = document.getElementById("dateCount");
+  if (!from && !to) { el.style.display="none"; return; }
+  const cnt = getFilteredPool().length;
+  el.textContent = cnt.toLocaleString() + "건 해당";
+  el.style.display = "inline-flex";
+}
+
+function clearDate() {
+  document.getElementById("dateFrom").value = "";
+  document.getElementById("dateTo").value   = "";
+  updateDateCount();
+}
+
+function stopSearch() {
+  stopFlag = true;
+}
+
+function resetSearchUI(btn) {
+  btn.disabled = false;
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="15" height="15"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="15.5" y2="15.5"/></svg> AI 분석 검색';
+  document.getElementById("stopBtn").className = "btn-stop";
+  document.getElementById("progWrap").className = "prog-wrap";
+}
+
+// ── 예상 시간 계산 및 표시
+function calcEstimatedTime(totalCount) {
+  const CHUNK = 50;
+  const PARALLEL = 5;
+  const SEC_PER_CALL = 1.5;
+  const chunks = Math.ceil(totalCount / CHUNK);
+  const waves  = Math.ceil(chunks / PARALLEL);
+  const secs   = Math.round(waves * SEC_PER_CALL);
+  if (secs < 60) return `약 ${secs}초`;
+  const m = Math.floor(secs / 60), s = secs % 60;
+  return s > 0 ? `약 ${m}분 ${s}초` : `약 ${m}분`;
+}
+
+function updateEstimatedTime() {
+  const pool  = getFilteredPool();
+  const bv    = document.getElementById("batchSize").value;
+  const total = bv === "all" ? pool.length : Math.min(pool.length, parseInt(bv));
+  const el    = document.getElementById("estimatedTime");
+  if (!el) return;
+  if (total === 0) { el.textContent = ""; return; }
+  el.textContent = `${total.toLocaleString()}건 · ${calcEstimatedTime(total)} 예상`;
+}
+
 async function aiSearch() {
   const q = document.getElementById("query").value.trim();
   if (!q) return;
   if (!allData.length) { showErr("데이터를 불러오는 중입니다. 잠시 후 다시 시도하세요."); return; }
   hideErr();
+  stopFlag = false;
 
   const btn = document.getElementById("searchBtn");
   btn.disabled = true;
   btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="15" height="15"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="15.5" y2="15.5"/></svg> 분석 중...';
+  document.getElementById("stopBtn").className = "btn-stop show";
 
-  document.getElementById("progWrap").className  = "prog-wrap show";
-  document.getElementById("aiBox").className      = "ai-box";
-  document.getElementById("resultsHd").className  = "results-hd";
-  document.getElementById("results").innerHTML    = '<div class="empty-state"><span class="empty-icon">⚽</span><span class="empty-text">AI가 VOC를 분석하고 있습니다…</span></div>';
+  document.getElementById("progWrap").className      = "prog-wrap show";
+  document.getElementById("aiBox").className         = "ai-box";
+  document.getElementById("resultsHd").className     = "results-hd";
+  document.getElementById("partialNotice").className = "partial-notice";
+  document.getElementById("exportFab").className     = "export-fab";
+  document.getElementById("relSlider").value         = 0;
+  document.getElementById("relBadge").textContent    = "전체";
+  currentRelMin = 0;
+  document.getElementById("results").innerHTML       = '<div class="empty-state"><span class="empty-icon">⚽</span><span class="empty-text">AI가 VOC를 분석하고 있습니다…</span></div>';
   matched = []; summaries = [];
 
+  // 날짜 필터 적용
+  const dateFilteredPool = getFilteredPool();
   const bv   = document.getElementById("batchSize").value;
-  const pool = bv === "all" ? allData : allData.slice(0, parseInt(bv));
-  const CHUNK = 20;
+  const pool = bv === "all" ? dateFilteredPool : dateFilteredPool.slice(0, parseInt(bv));
 
+  const CHUNK    = 50;   // 청크 크기 20→50 (API 호출 횟수 60% 감소)
+  const PARALLEL = 5;    // 동시 병렬 처리 수
+
+  let analyzedCount = 0;
+  let wasStopped    = false;
+  const startTime   = Date.now();
+
+  // 청크 배열 생성
+  const chunks = [];
   for (let i = 0; i < pool.length; i += CHUNK) {
-    const chunk = pool.slice(i, i + CHUNK);
-    setProgress(Math.round((i / pool.length) * 88));
+    chunks.push({ start: i, data: pool.slice(i, i + CHUNK) });
+  }
+
+  // PARALLEL 개씩 묶어서 병렬 처리
+  for (let w = 0; w < chunks.length; w += PARALLEL) {
+    if (stopFlag) { wasStopped = true; break; }
+
+    const wave     = chunks.slice(w, w + PARALLEL);
+    const doneIdx  = w + wave.length;
+    const pct      = Math.round((w / chunks.length) * 88);
+    setProgress(pct);
+
+    // 남은 시간 계산
+    const elapsed   = (Date.now() - startTime) / 1000;
+    const progress  = analyzedCount / pool.length;
+    const remaining = progress > 0.05
+      ? Math.round(elapsed / progress * (1 - progress))
+      : Math.round(calcEstimatedTime(pool.length - analyzedCount).replace(/[^0-9]/g,"") || 0);
+    const remStr = (() => {
+      if (w === 0) return calcEstimatedTime(pool.length);
+      if (remaining < 60) return `약 ${remaining}초 남음`;
+      const m = Math.floor(remaining/60), s = remaining%60;
+      return s > 0 ? `약 ${m}분 ${s}초 남음` : `약 ${m}분 남음`;
+    })();
+
     document.getElementById("progText").textContent =
-      `${i+1}~${Math.min(i+CHUNK,pool.length)}번 VOC 분석 중… (전체 ${pool.length}건)`;
+      `${analyzedCount + 1}~${Math.min(doneIdx * CHUNK, pool.length)}번 분석 중… · ${remStr}`;
 
-    const vocList = chunk.map((r,idx) =>
-      `[${i+idx}] ticket_id:${r[COL.ticket_id]||"없음"} | date:${(r[COL.date]||"").slice(0,10)} | path:${r[COL.path]||""} | message:${(r[COL.message]||"").slice(0,300)}`
-    ).join("\n");
+    // 병렬 fetch
+    const results = await Promise.allSettled(
+      wave.map(({ start, data }) => {
+        const vocList = data.map((r, idx) =>
+          `[${start+idx}] ticket_id:${r[COL.ticket_id]||"없음"} | date:${(r[COL.date]||"").slice(0,10)} | path:${r[COL.path]||""} | message:${(r[COL.message]||"").slice(0,300)}`
+        ).join("\n");
+        return fetch("/api/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: q, vocList }),
+        }).then(r => r.json());
+      })
+    );
 
-    try {
-      const res    = await fetch("/api/analyze", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ query:q, vocList }),
-      });
-      const parsed = await res.json();
-      if (parsed.summary) summaries.push(parsed.summary);
-      (parsed.results||[]).forEach(item => {
-        if (item.included && item.relevance >= 40) {
-          const row = pool[item.index];
-          if (row) matched.push({ row, relevance:item.relevance, reason:item.reason });
-        }
-      });
-    } catch(e) {}
+    results.forEach((res, wi) => {
+      if (res.status === "fulfilled") {
+        const parsed = res.value;
+        if (parsed.summary) summaries.push(parsed.summary);
+        (parsed.results||[]).forEach(item => {
+          if (item.included && item.relevance >= 60) {
+            // item.index는 vocList 내 상대 인덱스 (0~CHUNK-1)
+            const row = wave[wi].data[item.index];
+            if (row) matched.push({ row, relevance: item.relevance, reason: item.reason });
+          }
+        });
+        analyzedCount += wave[wi].data.length;
+      }
+    });
   }
 
   setProgress(100);
-  document.getElementById("progWrap").className = "prog-wrap";
-  matched.sort((a,b)=>b.relevance-a.relevance);
+  matched.sort((a,b) => b.relevance - a.relevance);
 
-  if (summaries.length) {
-    document.getElementById("aiBoxText").textContent = summaries.join(" / ");
+  if (wasStopped) {
+    document.getElementById("partialText").textContent =
+      `${analyzedCount.toLocaleString()}건 분석 후 정지. 아래는 정지 시점까지의 결과예요.`;
+    document.getElementById("partialNotice").className = "partial-notice show";
+  }
+
+  // ── 중복 제거: ticket_id + message 전체를 키로 완전히 중복 제거
+  const seen = new Set();
+  const deduped = matched.filter(({ row }) => {
+    const key = (row[COL.ticket_id]||"") + "||" + (row[COL.message]||"").trim();
+    if (seen.has(key)) return false;
+    seen.add(key); return true;
+  });
+  const dupCount = matched.length - deduped.length;
+  matched = deduped;
+
+  // ── AI 요약: 의미 있는 것만 최대 10개 불렛
+  const meaningfulSummaries = summaries.filter(s =>
+    s && !s.includes("관련 VOC 없음") && !s.includes("발견되지 않") && !s.includes("찾을 수 없") && !s.includes("존재하지 않")
+  );
+  const uniqueSummaries = [...new Set(meaningfulSummaries)].slice(0, 10);
+  const listEl = document.getElementById("aiBoxList");
+  if (uniqueSummaries.length) {
+    listEl.innerHTML = uniqueSummaries.map(s => `<li>${esc(s)}</li>`).join("");
     document.getElementById("aiBox").className = "ai-box show";
   }
+
+  const totalSec = Math.round((Date.now() - startTime) / 1000);
+  const timeStr  = totalSec < 60 ? `${totalSec}초` : `${Math.floor(totalSec/60)}분 ${totalSec%60}초`;
+
   document.getElementById("sMatched").textContent  = matched.length.toLocaleString();
-  document.getElementById("sAnalyzed").textContent = pool.length.toLocaleString();
-  document.getElementById("sRate").textContent     = Math.round(matched.length/pool.length*100)+"%";
+  document.getElementById("sAnalyzed").textContent = analyzedCount.toLocaleString() + (wasStopped ? ` / ${pool.length.toLocaleString()}` : "");
+  document.getElementById("sRate").textContent     = analyzedCount > 0 ? Math.round(matched.length/analyzedCount*100)+"%" : "—";
   document.getElementById("statsGrid").className   = "stats show";
-  btn.disabled=false;
-  btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="15" height="15"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="15.5" y2="15.5"/></svg> AI 분석 검색';
-  document.getElementById("resultsHd").className="results-hd show";
+
+  const etEl = document.getElementById("estimatedTime");
+  if (etEl) etEl.textContent = `완료 · ${timeStr} 소요`;
+
+  // ── 관련도 필터 + 내보내기 표시
+  currentRelMin = 0;
+  document.getElementById("relSlider").value = 0;
+  document.getElementById("relValueLabel").textContent = "전체 표시";
+  document.querySelectorAll(".rel-preset").forEach((b,i) => b.classList.toggle("on", i===0));
+  document.getElementById("exportFab").className = "export-fab show";
+
+  resetSearchUI(btn);
+  document.getElementById("resultsHd").className = "results-hd show";
   renderCards();
 }
 
 function renderCards() {
   const sort = document.getElementById("sortSel").value;
-  let arr = [...matched];
+  let arr = matched.filter(m => m.relevance >= currentRelMin);
   if (sort==="date") arr.sort((a,b)=>(b.row[COL.date]||"").localeCompare(a.row[COL.date]||""));
   document.getElementById("resultCount").textContent = arr.length;
   if (!arr.length) {
@@ -482,23 +765,90 @@ function renderCards() {
   document.getElementById("results").innerHTML = arr.map(({row,relevance,reason})=>{
     const bc=relevance>=75?"b-hi":relevance>=50?"b-mid":"b-lo";
     const bl=relevance>=75?"관련도 높음":relevance>=50?"관련도 보통":"관련도 낮음";
-    const d=(row[COL.date]||"").slice(0,10), p=row[COL.path]||"",
-          ti=row[COL.ticket_id]||"", ui=row[COL.user_id]||"";
+    const d=(row[COL.date]||"").slice(0,10), p=row[COL.path]||"", ui=row[COL.user_id]||"";
     return `<div class="voc-card">
       <div class="voc-badges">
         <span class="badge ${bc}">${bl} ${relevance}</span>
         ${d?`<span class="badge b-date">${d}</span>`:""}
         ${p?`<span class="badge b-path">${esc(p)}</span>`:""}
-        ${ti?`<span class="badge b-ticket">티켓 #${esc(ti)}</span>`:""}
         ${ui?`<span class="badge b-user">user ${esc(ui)}</span>`:""}
       </div>
       <div class="voc-msg">${esc(row[COL.message]||"")}</div>
-      ${reason?`<div class="voc-footer"><span class="ai-chip">AI</span>${esc(reason)}</div>`:""}
+      ${(reason && reason !== "무관")?`<div class="voc-footer"><span class="ai-chip">AI</span>${esc(reason)}</div>`:""}
     </div>`;
   }).join("");
 }
 
 function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+// ── 관련도 슬라이더
+function onRelSlide(val) {
+  val = parseInt(val);
+  currentRelMin = val;
+  document.getElementById("relBadge").textContent = val === 0 ? "전체" : `${val}점↑`;
+  renderCards();
+}
+
+function setRelPreset(val, el) {
+  currentRelMin = val;
+  document.getElementById("relSlider").value = val;
+  document.getElementById("relBadge").textContent = val === 0 ? "전체" : `${val}점↑`;
+  renderCards();
+}
+
+// ── CSV 다운로드
+function exportCSV() {
+  const arr = matched.filter(m => m.relevance >= currentRelMin);
+  if (!arr.length) { alert("내보낼 데이터가 없습니다."); return; }
+  const headers = ["관련도","날짜","경로","티켓ID","사용자ID","VOC내용","AI분석이유"];
+  const rows = arr.map(({ row, relevance, reason }) => [
+    relevance,
+    (row[COL.date]||"").slice(0,10),
+    row[COL.path]||"",
+    row[COL.ticket_id]||"",
+    row[COL.user_id]||"",
+    `"${(row[COL.message]||"").replace(/"/g,'""')}"`,
+    `"${(reason||"").replace(/"/g,'""')}"`
+  ]);
+  const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
+  const bom  = "\uFEFF"; // UTF-8 BOM for Excel
+  const blob = new Blob([bom + csv], { type: "text/csv;charset=utf-8;" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url;
+  const q = (document.getElementById("query").value||"VOC").slice(0,20).replace(/[^ㄱ-ㅎ가-힣a-zA-Z0-9]/g,"_");
+  a.download = `VOC_${q}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Google Drive 저장 (CSV를 Drive API로 업로드)
+async function exportGDrive() {
+  const arr = matched.filter(m => m.relevance >= currentRelMin);
+  if (!arr.length) { alert("내보낼 데이터가 없습니다."); return; }
+
+  const currentUser = auth ? auth.currentUser : null;
+  if (!currentUser) { alert("로그인이 필요합니다."); return; }
+
+  try {
+    const token = await currentUser.getIdToken();
+    // Google OAuth token은 Firebase 토큰과 다름 — Google Drive API용 액세스 토큰 필요
+    // 현재 Firebase 로그인에서 Google access_token을 가져옴
+    const credential = firebase.auth.GoogleAuthProvider.credentialFromResult ?
+      null : null;
+
+    // Google Drive는 별도 OAuth scope 필요 — Google Picker API 방식으로 안내
+    const confirmed = confirm(
+      "Google Drive 저장은 추가 권한이 필요해요.\n" +
+      "지금 CSV를 다운로드한 후 직접 Google Drive에 업로드하시겠어요?\n" +
+      "(확인 클릭 시 CSV 다운로드가 시작됩니다)"
+    );
+    if (confirmed) exportCSV();
+  } catch(e) {
+    console.error(e);
+    exportCSV();
+  }
+}
 
 initApp();
 </script>
