@@ -642,6 +642,7 @@ async function aiSearch() {
       return `[${i}] "${t[1]}"${desc}`;
     }).join("\n");
     let selectedIds = new Set();
+    let ticketRelevanceMap = {}; // ticket_id → {name, relevance, reason}
     let ticketSummaries = [];
 
     try {
@@ -651,19 +652,22 @@ async function aiSearch() {
         body: JSON.stringify({ mode: "ticket", query: q, ticketList }),
       });
       const parsed = await res.json();
-      const relMin = currentRelMin || 75;  // 티켓 기반 방식은 75점 이상 권장
+      // ── 임계값 85점으로 상향: 명확히 관련된 티켓만 선별
+      // 낮으면 "캐시 선물" 검색 시 "결제/환불" 같은 엉뚱한 티켓이 걸림
+      const TICKET_THRESHOLD = 85;
 
       (parsed.tickets || []).forEach(item => {
-        if (item.included && item.relevance >= relMin) {
+        if (item.included && item.relevance >= TICKET_THRESHOLD) {
           const ticket = tickets[item.index];
           if (ticket) {
-            selectedIds.add(String(ticket[0])); // t[0]=ID
+            const tid = String(ticket[0]);
+            selectedIds.add(tid);
+            ticketRelevanceMap[tid] = { name: ticket[1], relevance: item.relevance, reason: item.reason };
             ticketSummaries.push(`[${item.relevance}점] ${ticket[1]} — ${item.reason}`);
           }
         }
       });
     } catch(e) {
-      // 티켓 분석 실패 시 기존 방식으로 fallback
       console.warn("ticket mode failed, falling back:", e);
       selectedIds = null;
     }
@@ -682,33 +686,30 @@ async function aiSearch() {
 
       setProgress(80);
 
-      // 추출된 VOC를 matched에 넣기 (relevance는 티켓 관련도 그대로)
+      // ── VOC에 티켓의 실제 관련도 부여 (고정 80점 제거)
       filteredVOC.forEach(row => {
-        const tid = String(row[COL.ticket_id] || "").trim();
-        // 해당 티켓의 관련도 찾기
-        const ticketIdx = tickets.findIndex(t => String(t[0]).trim() === tid);
-        // 관련도는 이미 필터링됐으므로 기본 80으로 설정
-        const tid2 = String(row[COL.ticket_id]||"").trim();
-        const tinfo = tickets.find(t => String(t[0]).trim() === tid2);
-        matched.push({ row, relevance: 80, reason: "티켓 분류 일치", ticketName: tinfo ? tinfo[1] : "" });
+        const tid  = String(row[COL.ticket_id] || "").trim();
+        const info = ticketRelevanceMap[tid];
+        matched.push({
+          row,
+          relevance:  info?.relevance || 85,
+          reason:     info?.reason    || "티켓 분류 일치",
+          ticketName: info?.name      || ""
+        });
       });
 
       if (ticketSummaries.length) summaries = ticketSummaries;
-
       setProgress(100);
       document.getElementById("progText").textContent =
         `완료 — 관련 티켓 ${selectedIds.size}개 / VOC ${matched.length}건`;
 
-    } else if (selectedIds !== null && selectedIds.size === 0) {
-      // 관련 티켓 없음 → 기존 message 방식으로 fallback
-      document.getElementById("progText").textContent =
-        "관련 티켓 없음 → VOC 본문 직접 분석 중…";
-      await analyzeByMessage(q, pool, startTime);
-      resetSearchUI(btn);
-      finalizeResult(startTime, pool);
-      return;
     } else {
-      // 티켓 분석 오류 → fallback
+      // 관련 티켓 없거나 오류 → message 직접 분석으로 전환
+      // (티켓 시트에 관련 티켓이 없는 경우 — 흡연/캐시선물 등)
+      document.getElementById("progText").textContent =
+        selectedIds !== null
+          ? `관련 티켓 없음 (임계값 85점 미달) → VOC 본문 직접 분석 중…`
+          : `티켓 분석 오류 → VOC 본문 직접 분석 중…`;
       await analyzeByMessage(q, pool, startTime);
       resetSearchUI(btn);
       finalizeResult(startTime, pool);
