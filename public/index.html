@@ -334,9 +334,12 @@ textarea#query::placeholder{color:var(--placeholder);line-height:1.75}
       <div class="ctrl-group">
         <span class="ctrl-label">분석 건수</span>
         <select class="ctrl-select" id="batchSize" onchange="updateEstimatedTime()">
-          <option value="30">최근 30건</option>
-          <option value="50" selected>최근 50건</option>
-          <option value="100">최근 100건</option>
+          <option value="1000" selected>최근 1,000건</option>
+          <option value="2500">최근 2,500건</option>
+          <option value="5000">최근 5,000건</option>
+          <option value="7500">최근 7,500건</option>
+          <option value="10000">최근 10,000건</option>
+          <option value="15000">최근 15,000건</option>
           <option value="all">전체</option>
         </select>
       </div>
@@ -431,7 +434,7 @@ let FIREBASE_CONFIG = null;
 // ════════════════════════════════════════════════════
 
 let auth, provider;
-let allData = [], matched = [], summaries = [];
+let allData = [], tickets = [], matched = [], summaries = [];
 let stopFlag = false;
 let currentRelMin = 0;
 
@@ -524,6 +527,8 @@ async function loadSheet() {
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     allData = (data.rows || []).filter(r => r[COL.message] && r[COL.message].trim());
+    // TICKET 시트: [[id, name], ...] — A열=ID, B열=NAME
+    tickets = (data.tickets || []).filter(r => r[0] && r[1]);
     document.getElementById("gnbText").textContent = allData.length.toLocaleString() + "건 로드됨";
     document.getElementById("sTotal").textContent  = allData.length.toLocaleString();
     updateDateCount();
@@ -609,67 +614,147 @@ async function aiSearch() {
   const btn = document.getElementById("searchBtn");
   btn.disabled = true;
   btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="15" height="15"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="15.5" y2="15.5"/></svg> 분석 중...';
-  document.getElementById("stopBtn").className = "btn-stop show";
-
-  document.getElementById("progWrap").className      = "prog-wrap show";
-  document.getElementById("aiBox").className         = "ai-box";
-  document.getElementById("resultsHd").className     = "results-hd";
+  document.getElementById("stopBtn").className    = "btn-stop show";
+  document.getElementById("progWrap").className   = "prog-wrap show";
+  document.getElementById("aiBox").className      = "ai-box";
+  document.getElementById("resultsHd").className  = "results-hd";
   document.getElementById("partialNotice").className = "partial-notice";
-  document.getElementById("exportFab").className     = "export-fab";
-  document.getElementById("relSlider").value         = 0;
-  document.getElementById("relBadge").textContent    = "전체";
-  currentRelMin = 0;
-  document.getElementById("results").innerHTML       = '<div class="empty-state"><span class="empty-icon">⚽</span><span class="empty-text">AI가 VOC를 분석하고 있습니다…</span></div>';
+  document.getElementById("exportFab").className  = "export-fab";
+  document.getElementById("results").innerHTML    = '<div class="empty-state"><span class="empty-icon">⚽</span><span class="empty-text">AI가 VOC를 분석하고 있습니다…</span></div>';
   matched = []; summaries = [];
 
-  // 날짜 필터 적용
   const dateFilteredPool = getFilteredPool();
   const bv   = document.getElementById("batchSize").value;
   const pool = bv === "all" ? dateFilteredPool : dateFilteredPool.slice(-parseInt(bv));
+  const startTime = Date.now();
 
-  const CHUNK    = 50;   // 청크 크기 20→50 (API 호출 횟수 60% 감소)
-  const PARALLEL = 5;    // 동시 병렬 처리 수
+  // ══════════════════════════════════════════════
+  // 티켓명 기반 분석 (TICKET 시트 데이터가 있을 때)
+  // ══════════════════════════════════════════════
+  if (tickets.length > 0) {
+    setProgress(10);
+    document.getElementById("progText").textContent = `티켓 ${tickets.length}개 관련도 분석 중…`;
 
+    // Step 1: 티켓명 전체를 한 번에 AI 분석
+    // t[0]=ID, t[1]=NAME, t[2]=DESCRIPTION(선택) — description 있으면 AI 정확도 향상
+    const ticketList = tickets.map((t, i) => {
+      const desc = t[2] ? ` (${t[2]})` : "";
+      return `[${i}] "${t[1]}"${desc}`;
+    }).join("\n");
+    let selectedIds = new Set();
+    let ticketSummaries = [];
+
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "ticket", query: q, ticketList }),
+      });
+      const parsed = await res.json();
+      const relMin = currentRelMin || 75;  // 티켓 기반 방식은 75점 이상 권장
+
+      (parsed.tickets || []).forEach(item => {
+        if (item.included && item.relevance >= relMin) {
+          const ticket = tickets[item.index];
+          if (ticket) {
+            selectedIds.add(String(ticket[0])); // t[0]=ID
+            ticketSummaries.push(`[${item.relevance}점] ${ticket[1]} — ${item.reason}`);
+          }
+        }
+      });
+    } catch(e) {
+      // 티켓 분석 실패 시 기존 방식으로 fallback
+      console.warn("ticket mode failed, falling back:", e);
+      selectedIds = null;
+    }
+
+    setProgress(30);
+
+    if (selectedIds !== null && selectedIds.size > 0) {
+      // Step 2: 선별된 ticket_id에 해당하는 VOC만 추출
+      document.getElementById("progText").textContent =
+        `관련 티켓 ${selectedIds.size}개 발견 → VOC 추출 중…`;
+
+      const filteredVOC = pool.filter(row => {
+        const tid = String(row[COL.ticket_id] || "").trim();
+        return selectedIds.has(tid);
+      });
+
+      setProgress(80);
+
+      // 추출된 VOC를 matched에 넣기 (relevance는 티켓 관련도 그대로)
+      filteredVOC.forEach(row => {
+        const tid = String(row[COL.ticket_id] || "").trim();
+        // 해당 티켓의 관련도 찾기
+        const ticketIdx = tickets.findIndex(t => String(t[0]).trim() === tid);
+        // 관련도는 이미 필터링됐으므로 기본 80으로 설정
+        const tid2 = String(row[COL.ticket_id]||"").trim();
+        const tinfo = tickets.find(t => String(t[0]).trim() === tid2);
+        matched.push({ row, relevance: 80, reason: "티켓 분류 일치", ticketName: tinfo ? tinfo[1] : "" });
+      });
+
+      if (ticketSummaries.length) summaries = ticketSummaries;
+
+      setProgress(100);
+      document.getElementById("progText").textContent =
+        `완료 — 관련 티켓 ${selectedIds.size}개 / VOC ${matched.length}건`;
+
+    } else if (selectedIds !== null && selectedIds.size === 0) {
+      // 관련 티켓 없음 → 기존 message 방식으로 fallback
+      document.getElementById("progText").textContent =
+        "관련 티켓 없음 → VOC 본문 직접 분석 중…";
+      await analyzeByMessage(q, pool, startTime);
+      resetSearchUI(btn);
+      finalizeResult(startTime, pool);
+      return;
+    } else {
+      // 티켓 분석 오류 → fallback
+      await analyzeByMessage(q, pool, startTime);
+      resetSearchUI(btn);
+      finalizeResult(startTime, pool);
+      return;
+    }
+
+  } else {
+    // ══════════════════════════════════════════════
+    // TICKET 시트 없음 → 기존 message 직접 분석
+    // ══════════════════════════════════════════════
+    await analyzeByMessage(q, pool, startTime);
+  }
+
+  resetSearchUI(btn);
+  finalizeResult(startTime, pool);
+}
+
+// ── 기존 방식: message 직접 분석
+async function analyzeByMessage(q, pool, startTime) {
+  const CHUNK    = 50;
+  const PARALLEL = 5;
   let analyzedCount = 0;
   let wasStopped    = false;
-  const startTime   = Date.now();
-
-  // 청크 배열 생성
   const chunks = [];
   for (let i = 0; i < pool.length; i += CHUNK) {
     chunks.push({ start: i, data: pool.slice(i, i + CHUNK) });
   }
 
-  // PARALLEL 개씩 묶어서 병렬 처리
   for (let w = 0; w < chunks.length; w += PARALLEL) {
     if (stopFlag) { wasStopped = true; break; }
-
-    const wave     = chunks.slice(w, w + PARALLEL);
-    const doneIdx  = w + wave.length;
-    const pct      = Math.round((w / chunks.length) * 88);
+    const wave = chunks.slice(w, w + PARALLEL);
+    const pct  = 30 + Math.round((w / chunks.length) * 58);
     setProgress(pct);
-
-    // 남은 시간 계산
-    const elapsed   = (Date.now() - startTime) / 1000;
-    const progress  = analyzedCount / pool.length;
-    const remaining = progress > 0.05
-      ? Math.round(elapsed / progress * (1 - progress))
-      : Math.round(calcEstimatedTime(pool.length - analyzedCount).replace(/[^0-9]/g,"") || 0);
-    const remStr = (() => {
-      if (w === 0) return calcEstimatedTime(pool.length);
-      if (remaining < 60) return `약 ${remaining}초 남음`;
-      const m = Math.floor(remaining/60), s = remaining%60;
-      return s > 0 ? `약 ${m}분 ${s}초 남음` : `약 ${m}분 남음`;
-    })();
-
+    const elapsed  = (Date.now() - startTime) / 1000;
+    const progress = analyzedCount / pool.length;
+    const remaining = progress > 0.05 ? Math.round(elapsed / progress * (1 - progress)) : null;
+    const remStr = remaining
+      ? (remaining < 60 ? `약 ${remaining}초 남음` : `약 ${Math.floor(remaining/60)}분 남음`)
+      : calcEstimatedTime(pool.length);
     document.getElementById("progText").textContent =
-      `${analyzedCount + 1}~${Math.min(doneIdx * CHUNK, pool.length)}번 분석 중… · ${remStr}`;
+      `${analyzedCount+1}~${Math.min((w+PARALLEL)*CHUNK, pool.length)}번 분석 중… · ${remStr}`;
 
-    // 병렬 fetch
     const results = await Promise.allSettled(
       wave.map(({ start, data }) => {
         const vocList = data.map((r, idx) =>
-          `[${start+idx}] ticket_id:${r[COL.ticket_id]||"없음"} | date:${(r[COL.date]||"").slice(0,10)} | path:${r[COL.path]||""} | message:${(r[COL.message]||"").slice(0,300)}`
+          `[${idx}] ticket_id:${r[COL.ticket_id]||"없음"} | date:${(r[COL.date]||"").slice(0,10)} | path:${r[COL.path]||""} | message:${(r[COL.message]||"").slice(0,300)}`
         ).join("\n");
         return fetch("/api/analyze", {
           method: "POST",
@@ -678,14 +763,12 @@ async function aiSearch() {
         }).then(r => r.json());
       })
     );
-
     results.forEach((res, wi) => {
       if (res.status === "fulfilled") {
         const parsed = res.value;
         if (parsed.summary) summaries.push(parsed.summary);
         (parsed.results||[]).forEach(item => {
           if (item.included && item.relevance >= 60) {
-            // item.index는 vocList 내 상대 인덱스 (0~CHUNK-1)
             const row = wave[wi].data[item.index];
             if (row) matched.push({ row, relevance: item.relevance, reason: item.reason });
           }
@@ -694,59 +777,49 @@ async function aiSearch() {
       }
     });
   }
-
-  setProgress(100);
-  matched.sort((a,b) => b.relevance - a.relevance);
-
   if (wasStopped) {
     document.getElementById("partialText").textContent =
       `${analyzedCount.toLocaleString()}건 분석 후 정지. 아래는 정지 시점까지의 결과예요.`;
     document.getElementById("partialNotice").className = "partial-notice show";
   }
+  setProgress(100);
+}
 
-  // ── 중복 제거: ticket_id + message 전체를 키로 완전히 중복 제거
+function finalizeResult(startTime, pool) {
+  // 중복 제거
   const seen = new Set();
-  const deduped = matched.filter(({ row }) => {
+  matched = matched.filter(({ row }) => {
     const key = (row[COL.ticket_id]||"") + "||" + (row[COL.message]||"").trim();
     if (seen.has(key)) return false;
     seen.add(key); return true;
   });
-  const dupCount = matched.length - deduped.length;
-  matched = deduped;
+  matched.sort((a,b) => b.relevance - a.relevance);
 
-  // ── AI 요약: 의미 있는 것만 최대 10개 불렛
-  const meaningfulSummaries = summaries.filter(s =>
-    s && !s.includes("관련 VOC 없음") && !s.includes("발견되지 않") && !s.includes("찾을 수 없") && !s.includes("존재하지 않")
+  // AI 요약 (의미 있는 것만)
+  const meaningful = summaries.filter(s =>
+    s && !s.includes("없음") && !s.includes("발견되지 않") && !s.includes("찾을 수 없") && !s.includes("존재하지 않")
   );
-  const uniqueSummaries = [...new Set(meaningfulSummaries)].slice(0, 10);
-  const listEl = document.getElementById("aiBoxList");
-  if (uniqueSummaries.length) {
-    listEl.innerHTML = uniqueSummaries.map(s => `<li>${esc(s)}</li>`).join("");
+  const unique = [...new Set(meaningful)].slice(0, 10);
+  if (unique.length) {
+    document.getElementById("aiBoxList").innerHTML = unique.map(s => `<li>${esc(s)}</li>`).join("");
     document.getElementById("aiBox").className = "ai-box show";
   }
 
-  const totalSec = Math.round((Date.now() - startTime) / 1000);
+  const totalSec = Math.round((Date.now()-startTime)/1000);
   const timeStr  = totalSec < 60 ? `${totalSec}초` : `${Math.floor(totalSec/60)}분 ${totalSec%60}초`;
-
-  document.getElementById("sMatched").textContent  = matched.length.toLocaleString();
-  document.getElementById("sAnalyzed").textContent = analyzedCount.toLocaleString() + (wasStopped ? ` / ${pool.length.toLocaleString()}` : "");
-  document.getElementById("sRate").textContent     = analyzedCount > 0 ? Math.round(matched.length/analyzedCount*100)+"%" : "—";
-  document.getElementById("statsGrid").className   = "stats show";
-
   const etEl = document.getElementById("estimatedTime");
   if (etEl) etEl.textContent = `완료 · ${timeStr} 소요`;
 
-  // ── 관련도 필터 + 내보내기 표시
-  currentRelMin = 0;
-  document.getElementById("relSlider").value = 0;
-  document.getElementById("relBadge").textContent      = "전체";
-  document.querySelectorAll(".rel-preset").forEach((b,i) => b.classList.toggle("on", i===0));
-  document.getElementById("exportFab").className = "export-fab show";
-
-  resetSearchUI(btn);
-  document.getElementById("resultsHd").className = "results-hd show";
+  document.getElementById("sMatched").textContent  = matched.length.toLocaleString();
+  document.getElementById("sAnalyzed").textContent = pool.length.toLocaleString();
+  document.getElementById("sRate").textContent     = pool.length > 0 ? Math.round(matched.length/pool.length*100)+"%" : "—";
+  document.getElementById("statsGrid").className   = "stats show";
+  document.getElementById("exportFab").className   = "export-fab show";
+  document.getElementById("resultsHd").className   = "results-hd show";
   renderCards();
 }
+
+
 
 function renderCards() {
   const sort = document.getElementById("sortSel").value;
@@ -795,12 +868,12 @@ function setRelPreset(val, el) {
 function exportCSV() {
   const arr = matched.filter(m => m.relevance >= currentRelMin);
   if (!arr.length) { alert("내보낼 데이터가 없습니다."); return; }
-  const headers = ["관련도","날짜","경로","티켓ID","사용자ID","VOC내용","AI분석이유"];
-  const rows = arr.map(({ row, relevance, reason }) => [
+  const headers = ["관련도","티켓명","날짜","경로","사용자ID","VOC내용","AI분석이유"];
+  const rows = arr.map(({ row, relevance, reason, ticketName }) => [
     relevance,
+    `"${(ticketName||"").replace(/"/g,'""')}"`  ,
     (row[COL.date]||"").slice(0,10),
     row[COL.path]||"",
-    row[COL.ticket_id]||"",
     row[COL.user_id]||"",
     `"${(row[COL.message]||"").replace(/"/g,'""')}"`,
     `"${(reason||"").replace(/"/g,'""')}"`
