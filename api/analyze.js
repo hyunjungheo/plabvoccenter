@@ -185,87 +185,72 @@ JSON만 반환:
       });
     }
 
-    // ── 모드: VOC message 직접 분석 (기존 fallback)
+    // ── 모드: VOC message 직접 분석
+    // 티켓 시트에 관련 티켓이 없을 때 실행 — 검색어와 message 의미 일치만 판단
     const { query, vocList } = body;
     if (!query || !vocList) {
       return new Response(JSON.stringify({ error: 'query and vocList required' }), { status: 400 });
     }
 
-    // ── 1단계: 키워드 사전 분류 (API 호출 전)
-    const lines   = vocList.split('\n').filter(l => l.trim());
-    const results = [];
-    const needAI  = [];
+    // ── 키워드 사전 분류 완전 제거: 검색어와 무관한 VOC가 88점으로 오매칭되는 버그 방지
+    // VOC 티켓 배정용 classifyByKeywords()는 검색 관련도 판단에 사용 금지
+    // 전체를 AI에게 위임하여 검색어 기준으로 정확하게 판단
 
-    for (const line of lines) {
-      // "[idx] ticket_id:xxx | date:... | path:... | message:..." 파싱
-      const idxMatch  = line.match(/^\[(\d+)\]/);
-      const pathMatch = line.match(/path:([^|]*)/);
-      const msgMatch  = line.match(/message:(.*)/s);
-      if (!idxMatch || !msgMatch) continue;
-
-      const idx     = parseInt(idxMatch[1]);
-      const path    = (pathMatch?.[1] || '').trim();
-      const message = msgMatch[1].trim();
-
-      // 키워드 분류 시도
-      const kwResult = classifyByKeywords(message, path);
-      if (kwResult) {
-        // 검색어와 키워드 분류 티켓이 관련 있는지 확인
-        // (검색어가 해당 티켓 카테고리를 찾는 것인지)
-        results.push({ index: idx, included: true, relevance: 88, reason: kwResult.reason.replace('keyword: ','') });
-      } else if (hasFacility(message) && !isMatchReviewPath(path)) {
-        results.push({ index: idx, included: true, relevance: 85, reason: '시설 키워드' });
-      } else {
-        needAI.push({ idx, line });
-      }
-    }
-
-    // ── 2단계: 키워드 미매칭 항목만 AI로 분류
-    let aiSummary = '';
-    if (needAI.length > 0) {
-      const aiVocList = needAI.map(n => n.line).join('\n');
-
-      const prompt = `당신은 플랩풋볼 VOC 분류 담당자입니다.
+    const prompt = `당신은 플랩풋볼 VOC 검색 담당자입니다.
 
 ${DOMAIN}
 
 ${FEW_SHOT}
 
-사용자 요청: "${query}"
+사용자 검색어: "${query}"
+
+아래 VOC 목록에서 검색어와 실제로 관련 있는 항목만 찾아주세요.
 
 VOC 목록:
-${aiVocList}
+${vocList}
 
-[판단 규칙]
-1. VOC 본문을 직접 읽고 판단. 추측 금지.
-2. relevance 기준:
-   - 95~100: 요청 키워드가 VOC 본문에 직접 등장
-   - 75~94: 요청 주제와 명확히 관련된 상황 묘사
-   - 50~74: 간접 관련 가능성
-   - 50 미만: 무관
-3. relevance >= 60 → included: true, 미만 → false
-4. 본문에 관련 내용 전혀 없으면 relevance 10 이하, included: false
-5. reason: VOC 본문 근거로 15자 이내. included:false면 "무관"만.
-6. 매치 리뷰 경로의 이슈: 비매너→129, 지각→130, 밸런스→126, 매니저불만→108
-7. summary: included:true 건수와 핵심 1문장. 0건이면 "없음"
+[핵심 판단 원칙]
+- 반드시 VOC 본문(message)을 직접 읽고 검색어와 의미가 맞는지 판단
+- 검색어와 관련 없는 VOC는 included: false — 절대 억지로 연관 짓지 마세요
+- ticket_id, 날짜, 경로 등 메타 정보는 무시하고 오직 message 내용으로만 판단
+
+[relevance 기준]
+- 95~100: 검색어 키워드가 VOC 본문에 직접 등장
+- 75~94: 검색어 주제와 명확히 관련된 상황이 묘사됨
+- 50~74: 간접적으로 관련 가능성
+- 50 미만: 무관 → included: false
+
+[오류 방지 규칙]
+- "흡연 구역" 검색 시: 지각/밸런스/비매너 VOC는 모두 included: false
+- "채팅 기능" 검색 시: 오류/불만 VOC는 모두 included: false
+- 검색어와 다른 주제의 VOC가 아무리 많아도 무관하면 false
+- included: false 항목은 reason을 "무관"으로만 작성
+
+[summary]
+- 이번 청크에서 실제로 찾은 관련 VOC의 건수와 핵심 공통점 1문장
+- 관련 항목이 0건이면 반드시 "없음"만 작성 (이유 설명 불필요)
 
 JSON만 반환:
-{"results":[{"index":0,"included":true,"relevance":92,"reason":"이유"}],"summary":"요약"}`;
+{"results":[{"index":0,"included":true,"relevance":92,"reason":"흡연 직접 언급"}],"summary":"흡연구역 관련 2건"}`;
 
-      const raw = await callClaude(prompt, 2000);
-      try {
-        const parsed = JSON.parse(raw);
-        if (parsed.summary) aiSummary = parsed.summary;
-        for (const item of (parsed.results || [])) {
-          if (item.included && item.relevance >= 60) {
-            results.push({ index: item.index, included: true, relevance: item.relevance, reason: item.reason });
-          }
+    const raw = await callClaude(prompt, 2000);
+    let results = [], aiSummary = '';
+    try {
+      const parsed = JSON.parse(raw);
+      aiSummary = parsed.summary || '';
+      for (const item of (parsed.results || [])) {
+        if (item.included && item.relevance >= 60) {
+          results.push({
+            index: item.index,
+            included: true,
+            relevance: item.relevance,
+            reason: item.reason && item.reason !== '무관' ? item.reason : ''
+          });
         }
-      } catch(e) { /* 파싱 실패 시 스킵 */ }
-    }
+      }
+    } catch(e) { /* 파싱 실패 시 빈 결과 반환 */ }
 
-    const output = JSON.stringify({ results, summary: aiSummary });
-    return new Response(output, {
+    return new Response(JSON.stringify({ results, summary: aiSummary }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     });
 
