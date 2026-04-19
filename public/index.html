@@ -583,7 +583,7 @@ function resetSearchUI(btn) {
 
 // ── 예상 시간 계산 및 표시
 function calcEstimatedTime(totalCount) {
-  const CHUNK = 50;
+  const CHUNK = 30;  // analyzeByMessage와 동일
   const PARALLEL = 5;
   const SEC_PER_CALL = 1.5;
   const chunks = Math.ceil(totalCount / CHUNK);
@@ -729,7 +729,7 @@ async function aiSearch() {
 
 // ── 기존 방식: message 직접 분석
 async function analyzeByMessage(q, pool, startTime) {
-  const CHUNK    = 50;
+  const CHUNK    = 30;  // 50→30: 청크 축소로 AI 정확도 향상 (누락 방지)
   const PARALLEL = 5;
   let analyzedCount = 0;
   let wasStopped    = false;
@@ -769,7 +769,7 @@ async function analyzeByMessage(q, pool, startTime) {
         const parsed = res.value;
         if (parsed.summary) summaries.push(parsed.summary);
         (parsed.results||[]).forEach(item => {
-          if (item.included && item.relevance >= 60) {
+          if (item.included && item.relevance >= 50) { // 60→50: 경계선 VOC 누락 방지
             const row = wave[wi].data[item.index];
             if (row) matched.push({ row, relevance: item.relevance, reason: item.reason });
           }
