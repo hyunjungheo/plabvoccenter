@@ -240,7 +240,7 @@ ${vocList}
 JSON만 반환:
 {"results":[{"index":0,"included":true,"relevance":92,"reason":"캐시 선물 언급"}],"summary":"캐시 선물 기능 요청 3건"}`;
 
-    const raw = await callClaude(prompt, 2000);
+    const raw = await callClaude(prompt, 4000); // 50건 결과가 잘리지 않도록
     let results = [], aiSummary = '';
     try {
       const parsed = JSON.parse(raw);
@@ -278,7 +278,7 @@ async function callClaude(prompt, maxTokens) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-5',
       max_tokens: maxTokens,
       messages: [{ role: 'user', content: prompt }],
     }),
