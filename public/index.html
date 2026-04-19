@@ -625,13 +625,15 @@ async function aiSearch() {
 
   const dateFilteredPool = getFilteredPool();
   const bv   = document.getElementById("batchSize").value;
-  const pool = bv === "all" ? dateFilteredPool : dateFilteredPool.slice(-parseInt(bv));
   const startTime = Date.now();
 
   // ══════════════════════════════════════════════
   // 티켓명 기반 분석 (TICKET 시트 데이터가 있을 때)
   // ══════════════════════════════════════════════
   if (tickets.length > 0) {
+    // ── 티켓 모드: 날짜 필터된 전체 데이터 대상
+    // (ticket_id 매칭이므로 건수 제한 없이 전체에서 찾아야 함)
+    const pool = dateFilteredPool;
     setProgress(10);
     document.getElementById("progText").textContent = `티켓 ${tickets.length}개 관련도 분석 중…`;
 
@@ -706,11 +708,13 @@ async function aiSearch() {
     } else {
       // 관련 티켓 없거나 오류 → message 직접 분석으로 전환
       // (티켓 시트에 관련 티켓이 없는 경우 — 흡연/캐시선물 등)
+      // message 직접 분석은 건수 제한 적용
+      const msgPool = bv === "all" ? dateFilteredPool : dateFilteredPool.slice(-parseInt(bv));
       document.getElementById("progText").textContent =
         selectedIds !== null
-          ? `관련 티켓 없음 (임계값 85점 미달) → VOC 본문 직접 분석 중…`
-          : `티켓 분석 오류 → VOC 본문 직접 분석 중…`;
-      await analyzeByMessage(q, pool, startTime);
+          ? `관련 티켓 없음 (임계값 85점 미달) → VOC 본문 직접 분석 중… (${msgPool.length.toLocaleString()}건)`
+          : `티켓 분석 오류 → VOC 본문 직접 분석 중… (${msgPool.length.toLocaleString()}건)`;
+      await analyzeByMessage(q, msgPool, startTime);
       resetSearchUI(btn);
       finalizeResult(startTime, pool);
       return;
@@ -718,13 +722,15 @@ async function aiSearch() {
 
   } else {
     // ══════════════════════════════════════════════
-    // TICKET 시트 없음 → 기존 message 직접 분석
+    // TICKET 시트 없음 → message 직접 분석 (건수 제한 적용)
     // ══════════════════════════════════════════════
+    const pool = bv === "all" ? dateFilteredPool : dateFilteredPool.slice(-parseInt(bv));
     await analyzeByMessage(q, pool, startTime);
   }
 
   resetSearchUI(btn);
-  finalizeResult(startTime, pool);
+  // 티켓 모드는 전체 dateFilteredPool, message 모드는 이미 각 분기에서 처리됨
+  finalizeResult(startTime, dateFilteredPool);
 }
 
 // ── 기존 방식: message 직접 분석
